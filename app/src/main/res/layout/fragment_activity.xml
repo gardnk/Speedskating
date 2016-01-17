@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.percent.PercentFrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:focusableInTouchMode="true"
+    android:id="@+id/main_fragment"
+    android:background="@drawable/ice">
+
+    <android.support.design.widget.FloatingActionButton
+        app:layout_marginLeftPercent="87%"
+        app:layout_marginTopPercent="4%"
+        app:layout_marginRightPercent="2%"
+        app:layout_marginBottomPercent="87%"
+        android:background="@color/transparent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/search_button"
+        android:id="@+id/search_button"/>
+
+    <EditText
+        app:layout_marginTopPercent="5%"
+        app:layout_marginLeftPercent="5%"
+        app:layout_marginRightPercent="15%"
+        android:id="@+id/search_field"
+        android:hint="Name ..."
+        android:inputType="text"
+        android:background="@drawable/search_field"
+        android:textSize="@dimen/text_size"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/skater_list"
+        app:layout_marginLeftPercent="5%"
+        app:layout_marginRightPercent="15%"
+        app:layout_marginTopPercent="13%"
+        android:background="@color/main"/>
+
+
+    <com.astuetz.PagerSlidingTabStrip
+        app:layout_marginTopPercent="15%"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_heightPercent="10%"
+        app:pstsShouldExpand="true"
+        android:id="@+id/tab_strip"/>
+
+    <android.support.v4.view.ViewPager
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/pager"/>
+
+
+</android.support.percent.PercentFrameLayout>
