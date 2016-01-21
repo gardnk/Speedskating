@@ -1,7 +1,6 @@
 package com.example.gard.speedskating;
 
 import android.content.SharedPreferences;
-
 import com.googlecode.concurrenttrees.radix.ConcurrentRadixTree;
 import com.googlecode.concurrenttrees.radix.node.concrete.DefaultCharArrayNodeFactory;
 
@@ -16,6 +15,7 @@ public class RaceStructure {
     ArrayList<String> list;
     String urlString;
     SharedPreferences sharedPreferences;
+    TimeData timeData;
 
     RaceStructure(String urlString, SharedPreferences preferences){
         list = new ArrayList<>();
@@ -68,19 +68,21 @@ public class RaceStructure {
                 String klasse = data[4];
                 String name = data[6];
 
-                // hvis klassene kun er junior/senior, skilles bare menn og kvinner
-                //if (klasse.equals("MS") || klasse.equals("MJ")) klasse = "M";
-                //else if (klasse.equals("KS") || klasse.equals("KJ")) klasse = "K";
-
+                // set distance
                 String distanceString = dist + "" + klasse;
-                skater = new Skater(name);
-
-                // set distance and pair
                 distance = setDistance(distance, distanceString);
-                //if((pair = updatePair(bug,pair,skaterNumber++)) == -1)
+
+                // create/update skater
+                skater = updateSkater(name, tree, distance, data);
+
+                // update number of pairs in distance
                 pair = Integer.parseInt(data[2]);
                 distance.updatePair(pair);
 
+                if(getProgress(data, 8) == null) {
+                    timeData = new TimeData(System.currentTimeMillis(),distance);
+                    distance.setLivePair(pair);
+                }
 
                 // add distance to list of distances to gain control of occurrence
                 if (!distances.contains(distance)) distances.add(distance);
@@ -90,27 +92,67 @@ public class RaceStructure {
                 // add distance and pair to skater
                 tree.getValueForExactKey(name.toLowerCase()).addDistance(distance, pair);
 
-                // hvis distansen ikke finnes i innstillinger, legg den til
-                addPreference(distanceString);
+                // add default preference value
+                if(!sharedPreferences.contains(distance.getDistance())) addDefaultPrefs(distance);
             }
         }
         return new RaceData(tree,distances);
     }
 
+    public String getProgress(String[] data, int index){
+        // hvis det ikke er flere passeringstider, altså paret er ferdig
+        if(data.length <= index) return "End";
+        // hvis data er null, er det så langt løpet har kommet
+        if(data[index] == null) return null;
+        else{
+            // kjør rekursivt gjennom data
+            return getProgress(data,++index);
+        }
+    }
+
     public Distance setDistance(Distance distance, String distanceString){
-        if (distance == null || !distance.getDistance().equals(distanceString))
+        if (distance == null || !distance.getDistance().equals(distanceString)) {
+            if(distance != null) distance.setFinished();
             return new Distance(distanceString);
+        }
         return distance;
     }
 
-    public void addPreference(String key){
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        if(sharedPreferences.contains(key)) return;
-        editor.putInt(key, 1);
-        editor.commit();
+    public TimeData getTimeData(){ return timeData;}
+
+    public Skater updateSkater(String name, ConcurrentRadixTree<Skater> tree, Distance d, String[] data){
+        Skater s = tree.getValueForExactKey(name.toLowerCase());
+        if(s != null){
+           String time = data[8];
+            long currentTime = System.currentTimeMillis();
+            //MainActivityFragment.currentTime = currentTime;
+            if(time != null && !s.timeSet(d)) s.addTime(currentTime);
+           return s;
+       } else {
+           return new Skater(name);
+       }
     }
 
-    public int getPairTime(String distance){
-        return 0;
+    public void addDefaultPrefs(Distance d){
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        String distance = d.getDistance();
+
+        if(distance.contains("500")){
+            editor.putLong(distance,1);
+        } else if(distance.contains("1000")){
+            editor.putLong(distance,2);
+        } else if(distance.contains("1500")){
+            editor.putLong(distance,3);
+        } else if(distance.contains("3000")){
+            editor.putLong(distance,5);
+        } else if(distance.contains("5000")){
+            editor.putLong(distance,8);
+        } else if(distance.contains("10000")){
+            editor.putLong(distance, 16);
+        } else {
+            editor.putLong(distance, 1);
+        }
+
+        editor.apply();
     }
 }

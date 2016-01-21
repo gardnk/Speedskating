@@ -1,13 +1,13 @@
 package com.example.gard.speedskating;
 
+import android.content.res.AssetManager;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.view.DragEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 
@@ -28,6 +28,8 @@ public class SkaterFragment extends Fragment {
 
         textView = (TextView) v.findViewById(R.id.text);
         textView.setText(name);
+        Typeface typeface = Typeface.createFromAsset(getActivity().getAssets(),"REZ.ttf");
+        textView.setTypeface(typeface);
 
         timeView = (TextView)v.findViewById(R.id.time_view);
         updateViews();
@@ -66,6 +68,7 @@ public class SkaterFragment extends Fragment {
         int totalTime = time+(20*breaks);
         int minute = totalTime%60;
         int hour = totalTime/60;
+        if(minute < 10) return hour+".0"+minute;
         return hour+"."+minute;
     }
 }

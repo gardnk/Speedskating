@@ -1,70 +1,38 @@
 package com.example.gard.speedskating;
 
 import android.app.Activity;
-import android.app.FragmentManager;
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.PagerTabStrip;
-import android.support.v4.view.PagerTitleStrip;
 import android.support.v4.view.ViewPager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.astuetz.PagerSlidingTabStrip;
 import com.googlecode.concurrenttrees.radix.ConcurrentRadixTree;
-
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Observable;
-import java.util.StringTokenizer;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import rx.Observer;
-import rx.Subscriber;
-import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.android.schedulers.HandlerScheduler;
-import rx.schedulers.Schedulers;
-import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
 
 public class MainActivityFragment extends android.support.v4.app.Fragment {
     SharedPreferences preferences;
     public static ArrayList<Distance> distances;
     public static ConcurrentRadixTree<Skater> tree;
+    public TimeData timeData;
 
     View main;
     public FloatingActionButton searchButton;
@@ -78,8 +46,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        // start network activity
-        //getUpdatingStartlist();
+        preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
     }
 
     @Override
@@ -93,9 +60,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     @Override
     public void onViewCreated(View v, Bundle savedInstanceState){
         super.onViewCreated(v, savedInstanceState);
-        //startListeners();
-        //getUpdatingStartlist();
-        callAsynchronousTask();
+        getUpdatingStartlist();
     }
 
     void updateViews(){
@@ -134,21 +99,10 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         }
     }
 
-
-    // for å kjøre async task flere ganger
-    public void getUpdatingStartlist() {
-        // instantiate preferences
-        preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-        NetworkActivity activity = new NetworkActivity(getActivity());
-        activity.execute();
-    }
-
     public void searchListener(){
-        System.out.println("HORE");
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                System.out.println("FITTE");
                 searchField.setVisibility(View.VISIBLE);
                 skaterList.setVisibility(View.VISIBLE);
                 showSoftKeyboard();
@@ -196,10 +150,11 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     }
 
     public void showTabs(Skater skater){
-        // calculate tab info (times)
+        // calculate tab info (times and distances)
         ArrayList<Integer> times = getTimes(skater);
+        ArrayList<String> titles = getTabTitles(skater);
 
-        adapter = new SkaterTabAdapter(getFragmentManager(), skater, times);
+        adapter = new SkaterTabAdapter(getFragmentManager(), skater, times, titles);
         pager.setAdapter(adapter);
         tabStrip.setViewPager(pager);
         tabStrip.setIndicatorColor(R.color.main);
@@ -218,61 +173,83 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         }
     }
 
+    ArrayList<String> getTabTitles(Skater skater){
+        ArrayList<String> temp = new ArrayList<>();
+        for(Distance d : distances){
+            if(d.isFinished()) continue;
+            if(skater.contains(d)) {
+                if (d.getLivePair() > skater.getPair(d)) continue;
+                temp.add(d.getDistance());
+            }
+        }
+        return temp;
+    }
+
     ArrayList<Integer> getTimes(Skater skater){
         ArrayList<Integer> tmpTimes = new ArrayList<>();
-        int time = 0;
+        Long time = (long)0;
+
         for(Distance d : distances){
-            int pairTime = preferences.getInt(d.getDistance(),5);
+            // if the distance is finished
+            if(d.isFinished()) continue;
+
+            // get the pair currently skating
+            Long pair = (long)d.getLivePair();
+            Long pairTime = preferences.getLong(d.getDistance(), -1);
+
             if(skater.contains(d)){
-                time += skater.getPair(d)*pairTime;
-                tmpTimes.add(time);
+                Long remainingPairs = getRemaininPairs(skater,d,pair);
+                Long tmpTime = time+(remainingPairs*pairTime);
+                // add closest integer to the long
+                tmpTimes.add(tmpTime.intValue());
             }
-            time += d.getPairs()*pairTime;
+            // add the remaining pairs
+            time += (d.getPairs()-pair)*pairTime;
         }
         return tmpTimes;
     }
 
-    private class NetworkActivity extends AsyncTask<Void,Void,Void> {
+    public Long getRemaininPairs(Skater skater, Distance d, Long currentPair){
+        return (long)skater.getPair(d)-currentPair;
+    }
+
+    private class NetworkActivity extends AsyncTask<Void,Void,TimeData> {
 
         RaceStructure raceStructure;
         Activity mainActivity;
-        ProgressDialog progressDialog;
+        LoadingDialog loading;
 
         public NetworkActivity(Activity a){
             mainActivity = a;
+            loading = new LoadingDialog(mainActivity);
         }
 
         @Override
         public void onPreExecute(){
             super.onPreExecute();
-            //mainActivity.setContentView(R.layout.loading);
-            progressDialog = ProgressDialog.show(mainActivity,"Loading","loading csv",true);
-            //getActivity().getSupportFragmentManager().beginTransaction().add(R.id.loading, new LoadingFragment()).commit();
+            loading.show();
         }
 
         @Override
-        protected Void doInBackground(Void... params) {
+        protected TimeData doInBackground(Void... params) {
             raceStructure = new RaceStructure("http://web.glitretid.no/csv.php?default", preferences);
             raceStructure.update();
-            return null;
+            return raceStructure.getTimeData();
         }
 
         @Override
-        protected void onPostExecute(Void v){
+        protected void onPostExecute(TimeData data){
             RaceData raceData = raceStructure.getRaceData();
+            updatePreferences(data, timeData);
             tree = raceData.getSkaters();
             distances = raceData.getDistances();
-            progressDialog.dismiss();
-            //System.out.println("End");
-            //updateViews();
-            //startListeners();
+            loading.dismiss();
         }
     }
 
 
-    public void callAsynchronousTask() {
+    public void getUpdatingStartlist() {
         // start by running network activity once
-        preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         new NetworkActivity(getActivity()).execute();
 
         // then run it every 20 seconds to update
@@ -284,14 +261,57 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
                 handler.post(new Runnable() {
                     public void run() {
                         try {
+                            // handle time settings here
+                            // få execute til å returnere et objekt med tidsdata (tid, distanse)
                             new NetworkActivity(getActivity()).execute();
                         } catch (Exception e) {
-                            // TODO Auto-generated catch block
+                            Toast.makeText(getContext(),"Couldn't conenct to GlitreTid.", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
             }
         };
         timer.schedule(doAsynchronousTask, 0, 20000); //execute in every 20 seconds
+    }
+
+    public void updatePreferences(TimeData current, TimeData previous){
+        // hvis det er første distanse
+        if(timeData == null){
+            timeData = current;
+            return;
+        }
+
+        Distance prev = previous.getDistance();
+        Distance curr = current.getDistance();
+
+        // hvis distansen ikke er ferdig enda
+        if(prev.getDistance().equals(curr.getDistance())) return;
+
+        // seconds
+        Long start = previous.getTime()/1000;
+        Long end = current.getTime()/1000;
+
+        Long averageTime = (end-start)/prev.getPairs();
+
+        // update preferences
+        addPreferences(averageTime,prev);
+
+        // update previous distance
+        timeData = current;
+    }
+
+    public void addPreferences(Long time, Distance d){
+        SharedPreferences.Editor editor = preferences.edit();
+        Long currentPref;
+
+        // hvis distansen finnes i innstillinger fra før
+        if((currentPref = preferences.getLong(d.getDistance(), -1)) != -1){
+            Long nextPref = (currentPref+time)/2;
+            editor.putLong(d.getDistance(), nextPref);
+        } else {
+            editor.putLong(d.getDistance(), time);
+        }
+        // lagre endringer
+        editor.apply();
     }
 }

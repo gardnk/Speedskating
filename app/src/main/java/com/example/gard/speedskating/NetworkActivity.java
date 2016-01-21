@@ -5,7 +5,9 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.widget.EditText;
 
-public class NetworkActivity extends AsyncTask<Void,Void,Void> {
+import java.sql.Time;
+
+public class NetworkActivity extends AsyncTask<Void,Void,TimeData> {
 
     RaceStructure raceStructure;
     Activity mainActivity;
@@ -19,14 +21,14 @@ public class NetworkActivity extends AsyncTask<Void,Void,Void> {
     }
 
     @Override
-    protected Void doInBackground(Void... params) {
+    protected TimeData doInBackground(Void... params) {
         raceStructure = new RaceStructure("http://web.glitretid.no/csv.php?default", preferences);
         raceStructure.update();
         return null;
     }
 
     @Override
-    protected void onPostExecute(Void v){
+    protected void onPostExecute(TimeData data){
         RaceData raceData = raceStructure.getRaceData();
         MainActivityFragment.tree = raceData.getSkaters();
         MainActivityFragment.distances = raceData.getDistances();

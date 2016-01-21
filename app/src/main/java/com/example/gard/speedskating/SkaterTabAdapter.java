@@ -15,9 +15,9 @@ public class SkaterTabAdapter extends FragmentStatePagerAdapter {
     private ArrayList<Integer> times;
     private Skater skater;
 
-    public SkaterTabAdapter(FragmentManager fm, Skater skater, ArrayList<Integer> times) {
+    public SkaterTabAdapter(FragmentManager fm, Skater skater, ArrayList<Integer> times, ArrayList<String> titles) {
         super(fm);
-        pageTitle = skater.getDistances();
+        pageTitle = titles;
         this.times = times;
         this.skater = skater;
     }
@@ -40,12 +40,5 @@ public class SkaterTabAdapter extends FragmentStatePagerAdapter {
     @Override
     public CharSequence getPageTitle(int position) {
         return pageTitle.get(position);
-    }
-
-    String getTime(int position){
-        int tmpTime = times.get(position);
-        int minute = tmpTime%60;
-        int hour = tmpTime/60;
-        return hour+"."+minute;
     }
 }
