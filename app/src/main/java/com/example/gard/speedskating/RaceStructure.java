@@ -92,10 +92,13 @@ public class RaceStructure {
                 // add distance and pair to skater
                 tree.getValueForExactKey(name.toLowerCase()).addDistance(distance, pair);
 
-                // add default preference value
+                // add default preference value if no value exists already
                 if(!sharedPreferences.contains(distance.getDistance())) addDefaultPrefs(distance);
             }
         }
+        // if the last distance is finished
+        // works only when distance is live
+        if(distance != null && distance.getPairs() == distance.getLivePair()) distance.setFinished();
         return new RaceData(tree,distances);
     }
 

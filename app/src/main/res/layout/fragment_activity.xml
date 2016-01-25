@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:focusableInTouchMode="true"
     android:id="@+id/main_fragment"
-    android:background="@drawable/ice">
+    android:background="@drawable/hamar_ice">
 
     <android.support.design.widget.FloatingActionButton
         app:layout_marginLeftPercent="87%"
@@ -24,7 +24,7 @@
         app:layout_marginLeftPercent="5%"
         app:layout_marginRightPercent="15%"
         android:id="@+id/search_field"
-        android:hint="Name ..."
+        android:hint="@string/hint"
         android:inputType="text"
         android:background="@drawable/search_field"
         android:textSize="@dimen/text_size"
@@ -38,7 +38,7 @@
         app:layout_marginLeftPercent="5%"
         app:layout_marginRightPercent="15%"
         app:layout_marginTopPercent="13%"
-        android:background="@color/main"/>
+        android:background="@color/transparent"/>
 
 
     <com.astuetz.PagerSlidingTabStrip

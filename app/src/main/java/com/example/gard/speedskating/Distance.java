@@ -8,7 +8,8 @@ public class Distance {
     private int livePair;
 
     public Distance(String dist){
-        this.dist = dist; pairs = 0;
+        this.dist = dist;
+        pairs = 0;
         finished = false;
         livePair = 0;
     }

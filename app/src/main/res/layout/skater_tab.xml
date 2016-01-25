@@ -10,16 +10,6 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_heightPercent="8%"
-        app:layout_marginTopPercent="80%"
-        android:layout_gravity="center_horizontal"
-        android:background="@color/main"
-        android:textSize="@dimen/name"
-        android:id="@+id/text"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:id="@+id/time_view"
         app:layout_marginTopPercent="45%"
         android:layout_gravity="center_horizontal"
@@ -33,4 +23,17 @@
         app:layout_heightPercent="5%"
         android:id="@+id/breaks"
         />
+
+    <com.example.gard.speedskating.AutoResizeTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/text"
+        android:textSize="50sp"
+        android:maxLines="1"
+        android:layout_gravity="center_horizontal"
+        app:layout_widthPercent="80%"
+        app:layout_heightPercent="10%"
+        app:layout_marginLeftPercent="10%"
+        app:layout_marginRightPercent="10%"
+        app:layout_marginTopPercent="80%" />
 </android.support.percent.PercentFrameLayout>

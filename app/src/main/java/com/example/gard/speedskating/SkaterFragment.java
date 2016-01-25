@@ -1,6 +1,5 @@
 package com.example.gard.speedskating;
 
-import android.content.res.AssetManager;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -12,29 +11,33 @@ import android.widget.TextView;
 
 
 public class SkaterFragment extends Fragment {
-    private String name;
     private int time;
     private int breaks;
-    public TextView textView;
     public TextView timeView;
     private FloatingActionButton breakButton;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
         View v = inflater.inflate(R.layout.skater_tab, container, false);
-        name = getArguments().getString("name");
+        String name = getArguments().getString("name");
         time = getArguments().getInt("time");
         breaks = 0;
 
-        textView = (TextView) v.findViewById(R.id.text);
-        textView.setText(name);
-        Typeface typeface = Typeface.createFromAsset(getActivity().getAssets(),"REZ.ttf");
+        // set text view with name
+        Typeface typeface = Typeface.createFromAsset(getActivity().getAssets(),"Neon.ttf");
+        AutoResizeTextView textView = (AutoResizeTextView)v.findViewById(R.id.text);
         textView.setTypeface(typeface);
+        textView.setTextSize(150);
+        textView.setText(name);
+        textView.resizeText();
 
+        // set text view with time
         timeView = (TextView)v.findViewById(R.id.time_view);
         updateViews();
 
+        // add button for adding breaks
         breakButton = (FloatingActionButton)v.findViewById(R.id.breaks);
+        breakButton.setBackground(getActivity().getDrawable(R.drawable.zamboni));
         breakListener();
 
         return v;

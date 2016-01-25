@@ -14,6 +14,8 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -52,6 +54,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
         main = inflater.inflate(R.layout.fragment_activity, container, false);
+        changeStatusBarColor();
         updateViews();
         startListeners();
         return main;
@@ -61,6 +64,19 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     public void onViewCreated(View v, Bundle savedInstanceState){
         super.onViewCreated(v, savedInstanceState);
         getUpdatingStartlist();
+    }
+
+    public void changeStatusBarColor(){
+        Window window = getActivity().getWindow();
+
+        // clear FLAG_TRANSLUCENT_STATUS flag:
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+
+        // add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+        // finally change the color
+        window.setStatusBarColor(getActivity().getResources().getColor(R.color.statusbar));
     }
 
     void updateViews(){
@@ -182,6 +198,8 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
                 temp.add(d.getDistance());
             }
         }
+        // if all races are finished
+        if(temp.isEmpty()) temp.add("No races");
         return temp;
     }
 
@@ -206,6 +224,8 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
             // add the remaining pairs
             time += (d.getPairs()-pair)*pairTime;
         }
+        // if all races are finished
+        if(tmpTimes.isEmpty()) tmpTimes.add(0);
         return tmpTimes;
     }
 
