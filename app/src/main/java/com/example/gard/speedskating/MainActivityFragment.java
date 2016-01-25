@@ -3,6 +3,7 @@ package com.example.gard.speedskating;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -12,6 +13,7 @@ import android.support.v4.view.ViewPager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -19,8 +21,10 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.astuetz.PagerSlidingTabStrip;
@@ -37,12 +41,14 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     public TimeData timeData;
 
     View main;
-    public FloatingActionButton searchButton;
+    //public FloatingActionButton searchButton;
+    public Button searchButton;
     public EditText searchField;
     public ListView skaterList;
     ViewPager pager;
     SkaterTabAdapter adapter;
     PagerSlidingTabStrip tabStrip;
+    Typeface typeface;
 
 
     @Override
@@ -54,9 +60,11 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
         main = inflater.inflate(R.layout.fragment_activity, container, false);
+        typeface = Typeface.createFromAsset(getActivity().getAssets(),"Neon.ttf");
         changeStatusBarColor();
         updateViews();
         startListeners();
+        mainViewListener();
         return main;
     }
 
@@ -80,8 +88,8 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     }
 
     void updateViews(){
-        //getActivity().setContentView(R.layout.fragment_activity);
-        searchButton = (FloatingActionButton)main.findViewById(R.id.search_button);
+        //searchButton = (FloatingActionButton)main.findViewById(R.id.search_button);
+        searchButton = (Button)main.findViewById(R.id.search_button2);
         searchField = (EditText)main.findViewById(R.id.search_field);
         skaterList = (ListView)main.findViewById(R.id.skater_list);
         pager = (ViewPager)main.findViewById(R.id.pager);
@@ -91,6 +99,19 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         skaterList.setVisibility(View.INVISIBLE);
         pager.setVisibility(View.INVISIBLE);
         tabStrip.setVisibility(View.INVISIBLE);
+
+        searchField.setTypeface(typeface);
+    }
+
+    void mainViewListener(){
+        main.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                skaterList.setVisibility(View.INVISIBLE);
+                hideSoftKeyboard();
+                return true;
+            }
+        });
     }
 
     public void startListeners(){
@@ -128,7 +149,18 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     }
 
     public void textListener(){
-        final ArrayAdapter<String> listAdapter = new ArrayAdapter<>(getContext(), R.layout.list_item);
+        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(),R.layout.list_item){
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent){
+                if(convertView == null){
+                    LayoutInflater inflater = (LayoutInflater)getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    convertView = inflater.inflate(R.layout.list_item,null);
+                    TextView textView = (TextView)convertView.findViewById(R.id.text1);
+                    textView.setTypeface(typeface);
+                }
+                return super.getView(position, convertView, parent);
+            }
+        };
         searchField.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -137,11 +169,11 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                listAdapter.clear();
+                adapter.clear();
                 for (Skater skater : tree.getValuesForClosestKeys(s)) {
-                    listAdapter.add(skater.getName());
+                    adapter.add(skater.getName());
                 }
-                skaterList.setAdapter(listAdapter);
+                skaterList.setAdapter(adapter);
             }
 
             @Override

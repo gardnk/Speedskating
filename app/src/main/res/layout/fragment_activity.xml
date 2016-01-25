@@ -8,16 +8,17 @@
     android:id="@+id/main_fragment"
     android:background="@drawable/hamar_ice">
 
-    <android.support.design.widget.FloatingActionButton
-        app:layout_marginLeftPercent="87%"
-        app:layout_marginTopPercent="4%"
-        app:layout_marginRightPercent="2%"
-        app:layout_marginBottomPercent="87%"
-        android:background="@color/transparent"
+
+    <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/search_button"
-        android:id="@+id/search_button"/>
+        android:id="@+id/search_button2"
+        app:layout_marginLeftPercent="88%"
+        app:layout_marginTopPercent="5%"
+        app:layout_marginRightPercent="2%"
+        app:layout_heightPercent="6%"
+        app:layout_widthPercent="7%"
+        android:background="@drawable/ic_search_black_24dp"/>
 
     <EditText
         app:layout_marginTopPercent="5%"

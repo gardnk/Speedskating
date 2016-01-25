@@ -14,7 +14,9 @@ public class SkaterFragment extends Fragment {
     private int time;
     private int breaks;
     public TextView timeView;
-    private FloatingActionButton breakButton;
+    private FloatingActionButton addBreaks;
+    private FloatingActionButton subtractBreaks;
+    public TextView breakNumber;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
@@ -22,6 +24,7 @@ public class SkaterFragment extends Fragment {
         String name = getArguments().getString("name");
         time = getArguments().getInt("time");
         breaks = 0;
+        String breakDisplay = ""+breaks;
 
         // set text view with name
         Typeface typeface = Typeface.createFromAsset(getActivity().getAssets(),"Neon.ttf");
@@ -31,20 +34,26 @@ public class SkaterFragment extends Fragment {
         textView.setText(name);
         textView.resizeText();
 
-        // set text view with time
+        // set text view with time and break view with breaks
         timeView = (TextView)v.findViewById(R.id.time_view);
+        timeView.setTypeface(typeface);
+        breakNumber = (TextView)v.findViewById(R.id.break_number_display);
+        breakNumber.setTypeface(typeface);
+        breakNumber.setText(breakDisplay);
         updateViews();
 
-        // add button for adding breaks
-        breakButton = (FloatingActionButton)v.findViewById(R.id.breaks);
-        breakButton.setBackground(getActivity().getDrawable(R.drawable.zamboni));
+        // add buttons for managing breaks
+        addBreaks = (FloatingActionButton)v.findViewById(R.id.add_breaks);
+        addBreaks.setBackgroundTintList(getResources().getColorStateList(R.color.addBreak));
+        subtractBreaks = (FloatingActionButton)v.findViewById(R.id.subtract_breaks);
+        subtractBreaks.setBackgroundTintList(getResources().getColorStateList(R.color.subBreak));
         breakListener();
 
         return v;
     }
 
     public void breakListener(){
-        breakButton.setOnClickListener(new View.OnClickListener() {
+        addBreaks.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 breaks++;
@@ -52,19 +61,20 @@ public class SkaterFragment extends Fragment {
             }
         });
 
-        breakButton.setOnLongClickListener(new View.OnLongClickListener() {
+        subtractBreaks.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onLongClick(View v) {
+            public void onClick(View v) {
                 breaks--;
                 updateViews();
-                return true;
             }
         });
     }
 
     public void updateViews(){
         String time = getTime();
+        String breakDisplay = ""+breaks;
         timeView.setText(time);
+        breakNumber.setText(breakDisplay);
     }
 
     private String getTime(){
