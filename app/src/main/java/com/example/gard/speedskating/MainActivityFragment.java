@@ -35,6 +35,9 @@ import java.util.TimerTask;
 
 
 public class MainActivityFragment extends android.support.v4.app.Fragment {
+    final static int BOLD = 1;
+    //final static int NORMAL = 0;
+
     SharedPreferences preferences;
     public static ArrayList<Distance> distances;
     public static ConcurrentRadixTree<Skater> tree;
@@ -49,6 +52,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     SkaterTabAdapter adapter;
     PagerSlidingTabStrip tabStrip;
     Typeface typeface;
+    public boolean tabSet = false;
 
 
     @Override
@@ -109,6 +113,10 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
             public boolean onTouch(View v, MotionEvent event) {
                 skaterList.setVisibility(View.INVISIBLE);
                 hideSoftKeyboard();
+                pager.setVisibility(View.VISIBLE);
+                tabStrip.setVisibility(View.VISIBLE);
+                searchField.setVisibility(View.INVISIBLE);
+                main.requestFocus();
                 return true;
             }
         });
@@ -198,6 +206,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     }
 
     public void showTabs(Skater skater){
+        tabSet = true;
         // calculate tab info (times and distances)
         ArrayList<Integer> times = getTimes(skater);
         ArrayList<String> titles = getTabTitles(skater);
@@ -205,9 +214,10 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         adapter = new SkaterTabAdapter(getFragmentManager(), skater, times, titles);
         pager.setAdapter(adapter);
         tabStrip.setViewPager(pager);
-        tabStrip.setIndicatorColor(R.color.main);
-        tabStrip.setTextColor(R.color.main);
-        tabStrip.setDividerColor(R.color.transparent);
+        tabStrip.setIndicatorColor(R.color.statusbar);
+        tabStrip.setTextColor(R.color.statusbar);
+        tabStrip.setDividerColor(R.color.statusbar);
+        tabStrip.setTypeface(typeface,BOLD);
 
         // make the tabs visible
         pager.setVisibility(View.VISIBLE);
