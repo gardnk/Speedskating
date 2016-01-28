@@ -6,8 +6,8 @@ import android.os.Bundle;
 
 
 public class LoadingDialog extends ProgressDialog {
-    public LoadingDialog(Context context) {
-        super(context);
+    public LoadingDialog(Context context, int style) {
+        super(context, style);
     }
 
     @Override

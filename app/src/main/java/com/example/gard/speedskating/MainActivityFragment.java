@@ -5,10 +5,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -87,8 +89,18 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         // add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
 
-        // finally change the color
-        window.setStatusBarColor(getActivity().getResources().getColor(R.color.statusbar));
+        // set color to the status bar
+        window.setStatusBarColor(getColor(getContext(),R.color.statusbar));
+    }
+
+    // get color resource depending on api level
+    public int getColor(Context context, int id){
+        // get color method only works in api level 23 and above
+        if(Build.VERSION.SDK_INT >= 23){
+            return context.getResources().getColor(id, null);
+        } else {
+            return ContextCompat.getColor(context,id);
+        }
     }
 
     void updateViews(){
@@ -161,8 +173,9 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
             @Override
             public View getView(int position, View convertView, ViewGroup parent){
                 if(convertView == null){
+                    ViewGroup root = (ViewGroup)main.findViewById(android.R.id.content);
                     LayoutInflater inflater = (LayoutInflater)getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    convertView = inflater.inflate(R.layout.list_item,null);
+                    convertView = inflater.inflate(R.layout.list_item,root);
                     TextView textView = (TextView)convertView.findViewById(R.id.text1);
                     textView.setTypeface(typeface);
                 }
@@ -217,7 +230,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         tabStrip.setIndicatorColor(R.color.statusbar);
         tabStrip.setTextColor(R.color.statusbar);
         tabStrip.setDividerColor(R.color.statusbar);
-        tabStrip.setTypeface(typeface,BOLD);
+        tabStrip.setTypeface(typeface, BOLD);
 
         // make the tabs visible
         pager.setVisibility(View.VISIBLE);
@@ -258,7 +271,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
             Long pairTime = preferences.getLong(d.getDistance(), -1);
 
             if(skater.contains(d)){
-                Long remainingPairs = getRemaininPairs(skater,d,pair);
+                Long remainingPairs = getRemainingPairs(skater, d, pair);
                 Long tmpTime = time+(remainingPairs*pairTime);
                 // add closest integer to the long
                 tmpTimes.add(tmpTime.intValue());
@@ -271,7 +284,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         return tmpTimes;
     }
 
-    public Long getRemaininPairs(Skater skater, Distance d, Long currentPair){
+    public Long getRemainingPairs(Skater skater, Distance d, Long currentPair){
         return (long)skater.getPair(d)-currentPair;
     }
 
@@ -283,7 +296,8 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
 
         public NetworkActivity(Activity a){
             mainActivity = a;
-            loading = new LoadingDialog(mainActivity);
+            loading = new LoadingDialog(mainActivity, R.style.loading_dialog);
+            loading.setContentView(R.layout.loading);
         }
 
         @Override
