@@ -3,6 +3,7 @@ package com.example.gard.speedskating;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -46,8 +47,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     public TimeData timeData;
 
     View main;
-    //public FloatingActionButton searchButton;
-    public Button searchButton;
+    public FloatingActionButton searchButton;
     public EditText searchField;
     public ListView skaterList;
     ViewPager pager;
@@ -90,7 +90,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
 
         // set color to the status bar
-        window.setStatusBarColor(getColor(getContext(),R.color.statusbar));
+        window.setStatusBarColor(getColor(getContext(), R.color.statusbar));
     }
 
     // get color resource depending on api level
@@ -103,9 +103,18 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         }
     }
 
+    // get color state list depending on api level
+    public ColorStateList getColorStateList(int id){
+        if(Build.VERSION.SDK_INT >= 23){
+            return getResources().getColorStateList(id, null);
+        } else {
+            return ContextCompat.getColorStateList(getContext(), id);
+        }
+    }
+
     void updateViews(){
-        //searchButton = (FloatingActionButton)main.findViewById(R.id.search_button);
-        searchButton = (Button)main.findViewById(R.id.search_button2);
+        searchButton = (FloatingActionButton)main.findViewById(R.id.search_button);
+        searchButton.setBackgroundTintList(getColorStateList(R.color.statusbar));
         searchField = (EditText)main.findViewById(R.id.search_field);
         skaterList = (ListView)main.findViewById(R.id.skater_list);
         pager = (ViewPager)main.findViewById(R.id.pager);

@@ -1,9 +1,12 @@
 package com.example.gard.speedskating;
 
+import android.content.res.ColorStateList;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,12 +47,21 @@ public class SkaterFragment extends Fragment {
 
         // add buttons for managing breaks
         addBreaks = (FloatingActionButton)v.findViewById(R.id.add_breaks);
-        addBreaks.setBackgroundTintList(getResources().getColorStateList(R.color.addBreak));
+        addBreaks.setBackgroundTintList(getColorStateList(R.color.addBreak));
         subtractBreaks = (FloatingActionButton)v.findViewById(R.id.subtract_breaks);
-        subtractBreaks.setBackgroundTintList(getResources().getColorStateList(R.color.subBreak));
+        subtractBreaks.setBackgroundTintList(getColorStateList(R.color.subBreak));
+
         breakListener();
 
         return v;
+    }
+
+    public ColorStateList getColorStateList(int id){
+        if(Build.VERSION.SDK_INT >= 23){
+            return getResources().getColorStateList(id,null);
+        } else {
+            return ContextCompat.getColorStateList(getContext(),id);
+        }
     }
 
     public void breakListener(){
