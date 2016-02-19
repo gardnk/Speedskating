@@ -2,4 +2,6 @@
     <string name="app_name">Speedskating</string>
     <string name="action_settings">Settings</string>
     <string name="hint">Navn på løper</string>
+    <string name="logo_center">Logo center</string>
+    <string name="logo_top">Logo top</string>
 </resources>

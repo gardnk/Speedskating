@@ -26,6 +26,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,8 +46,13 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     public static ArrayList<Distance> distances;
     public static ConcurrentRadixTree<Skater> tree;
     public TimeData timeData;
+    private Skater skater;
+    private int livePair;
+    private long pairStarted;
 
     View main;
+    public ImageView logo;
+    public ImageView welcomeLogo;
     public FloatingActionButton searchButton;
     public EditText searchField;
     public ListView skaterList;
@@ -55,6 +61,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     PagerSlidingTabStrip tabStrip;
     Typeface typeface;
     public boolean tabSet = false;
+    public boolean startup = true;
 
 
     @Override
@@ -99,7 +106,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         if(Build.VERSION.SDK_INT >= 23){
             return context.getResources().getColor(id, null);
         } else {
-            return ContextCompat.getColor(context,id);
+            return ContextCompat.getColor(context, id);
         }
     }
 
@@ -113,6 +120,8 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     }
 
     void updateViews(){
+        welcomeLogo = (ImageView)main.findViewById(R.id.big_logo);
+        logo = (ImageView)main.findViewById(R.id.logo);
         searchButton = (FloatingActionButton)main.findViewById(R.id.search_button);
         searchButton.setBackgroundTintList(getColorStateList(R.color.statusbar));
         searchField = (EditText)main.findViewById(R.id.search_field);
@@ -120,6 +129,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         pager = (ViewPager)main.findViewById(R.id.pager);
         tabStrip = (PagerSlidingTabStrip)main.findViewById(R.id.tab_strip);
 
+        logo.setVisibility(View.INVISIBLE);
         searchField.setVisibility(View.INVISIBLE);
         skaterList.setVisibility(View.INVISIBLE);
         pager.setVisibility(View.INVISIBLE);
@@ -137,6 +147,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
                 pager.setVisibility(View.VISIBLE);
                 tabStrip.setVisibility(View.VISIBLE);
                 searchField.setVisibility(View.INVISIBLE);
+                logo.setVisibility(View.VISIBLE);
                 main.requestFocus();
                 return true;
             }
@@ -169,8 +180,15 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (startup) {
+                    welcomeLogo.setVisibility(View.GONE);
+                    startup = false;
+                }
+                logo.setVisibility(View.INVISIBLE);
                 searchField.setVisibility(View.VISIBLE);
                 skaterList.setVisibility(View.VISIBLE);
+                // reset skater when searching for new one
+                skater = null;
                 showSoftKeyboard();
                 hideTabs();
             }
@@ -220,8 +238,9 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
                 hideSoftKeyboard();
                 skaterList.setVisibility(View.INVISIBLE);
                 searchField.setVisibility(View.INVISIBLE);
+                logo.setVisibility(View.VISIBLE);
                 String name = (String) parent.getItemAtPosition(position);
-                Skater skater = tree.getValueForExactKey(name.toLowerCase());
+                skater = tree.getValueForExactKey(name.toLowerCase());
                 showTabs(skater);
             }
         });
@@ -246,6 +265,25 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         tabStrip.setVisibility(View.VISIBLE);
     }
 
+    public void showTabs(Skater skater, TimeData data){
+        tabSet = true;
+        // calculate tab info (times and distances)
+        ArrayList<Integer> times = getTimes(skater, data);
+        ArrayList<String> titles = getTabTitles(skater);
+
+        adapter = new SkaterTabAdapter(getFragmentManager(), skater, times, titles);
+        pager.setAdapter(adapter);
+        tabStrip.setViewPager(pager);
+        tabStrip.setIndicatorColor(R.color.statusbar);
+        tabStrip.setTextColor(R.color.statusbar);
+        tabStrip.setDividerColor(R.color.statusbar);
+        tabStrip.setTypeface(typeface, BOLD);
+
+        // make the tabs visible
+        pager.setVisibility(View.VISIBLE);
+        tabStrip.setVisibility(View.VISIBLE);
+    }
+
     void hideTabs(){
         if(pager != null && tabStrip != null) {
             pager.setVisibility(View.INVISIBLE);
@@ -254,10 +292,13 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     }
 
     ArrayList<String> getTabTitles(Skater skater){
+
         ArrayList<String> temp = new ArrayList<>();
         for(Distance d : distances){
+            System.out.println(skater.contains(d));
             if(d.isFinished()) continue;
             if(skater.contains(d)) {
+                System.out.println(d.getDistance());
                 if (d.getLivePair() > skater.getPair(d)) continue;
                 temp.add(d.getDistance());
             }
@@ -267,6 +308,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         return temp;
     }
 
+    // when a new pair has started
     ArrayList<Integer> getTimes(Skater skater){
         ArrayList<Integer> tmpTimes = new ArrayList<>();
         Long time = (long)0;
@@ -291,6 +333,47 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         // if all races are finished
         if(tmpTimes.isEmpty()) tmpTimes.add(0);
         return tmpTimes;
+    }
+
+    // when no new pair has started, should also update the time
+    ArrayList<Integer> getTimes(Skater skater, TimeData data){
+        ArrayList<Integer> tmpTimes = new ArrayList<>();
+        Long time = (long)0;
+
+        for(Distance d : distances){
+            // if the distance is finished
+            if(d.isFinished()) continue;
+
+            // get the pair currently skating
+            Long pair = (long)d.getLivePair();
+            Long pairTime = preferences.getLong(d.getDistance(), -1);
+
+            if(skater.contains(d)){
+                Long remainingPairs = getRemainingPairs(skater, d, pair);
+                Long tmpTime = time+(remainingPairs*pairTime);
+
+                // if a pair is still skating
+                tmpTime = updateIfLive(tmpTime,data,d);
+                // add closest integer to the long
+                tmpTimes.add(tmpTime.intValue());
+            }
+            // add the remaining pairs
+            time += (d.getPairs()-pair)*pairTime;
+        }
+        // if all races are finished
+        if(tmpTimes.isEmpty()) tmpTimes.add(0);
+        return tmpTimes;
+    }
+
+    public long updateIfLive(long time, TimeData data, Distance d){
+        long toReturn = time;
+        // not live
+        if(data == null) return toReturn;
+
+        if(data.getDistance() == d && data.getPair() == livePair){
+            toReturn = time-updateTime(System.currentTimeMillis());
+        }
+        return toReturn;
     }
 
     public Long getRemainingPairs(Skater skater, Distance d, Long currentPair){
@@ -325,9 +408,18 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         @Override
         protected void onPostExecute(TimeData data){
             RaceData raceData = raceStructure.getRaceData();
-            updatePreferences(data, timeData);
             tree = raceData.getSkaters();
             distances = raceData.getDistances();
+
+            if(data != null) {
+                updatePreferences(data, timeData);
+                updateCurrentPairStartTime(data.getPair());
+            }
+
+            if(tabSet) {
+                skater = tree.getValueForExactKey(skater.getName().toLowerCase());
+                showTabs(skater, data);
+            }
             loading.dismiss();
         }
     }
@@ -350,7 +442,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
                             // få execute til å returnere et objekt med tidsdata (tid, distanse)
                             new NetworkActivity(getActivity()).execute();
                         } catch (Exception e) {
-                            Toast.makeText(getContext(),"Couldn't conenct to GlitreTid.", Toast.LENGTH_SHORT).show();
+                            // do something clever
                         }
                     }
                 });
@@ -398,5 +490,17 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         }
         // lagre endringer
         editor.apply();
+    }
+
+    // return time since pair started
+    long updateTime(long time){
+        return time-pairStarted;
+    }
+
+    void updateCurrentPairStartTime(int pair){
+        if(livePair != pair) {
+            pairStarted = System.currentTimeMillis();
+            livePair = pair;
+        }
     }
 }

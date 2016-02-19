@@ -18,7 +18,7 @@ public class Skater {
     public void addDistance(Distance d, int pair){ races.add(d); pairs.add(pair);}
     public void addTime(Long timeFinished){ previousTimes.add(timeFinished);}
 
-    public boolean contains(Distance d){ return races.contains(d);}
+    public boolean contains(Distance d){return races.contains(d);}
     public int getPair(Distance d){ return pairs.get(races.indexOf(d));}
     public List<String> getDistances(){
         List<String> list = new ArrayList<>();

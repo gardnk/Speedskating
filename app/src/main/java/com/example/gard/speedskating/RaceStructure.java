@@ -16,6 +16,7 @@ public class RaceStructure {
     String urlString;
     SharedPreferences sharedPreferences;
     TimeData timeData;
+    boolean kvartett = false;
 
     RaceStructure(String urlString, SharedPreferences preferences){
         list = new ArrayList<>();
@@ -48,7 +49,7 @@ public class RaceStructure {
 
         // hvis det er en bug i scriptet
         //int skaterNumber = 1;
-        int pair;
+        int pair = 0;
         //boolean bug = false;
 
         for (String line : list) {
@@ -61,7 +62,7 @@ public class RaceStructure {
                 // er distansen trukket?
                 if(data[2].equals("")) continue;
 
-                // hvis det er et par med kun en løper
+                // hvis det er et par med kun én løper
                 if (data.length == 6 || data[6].equals("")) continue;
 
                 String dist = data[0];
@@ -72,17 +73,35 @@ public class RaceStructure {
                 String distanceString = dist + "" + klasse;
                 distance = setDistance(distance, distanceString);
 
-                // create/update skater
-                skater = updateSkater(name, tree, distance, data);
-
                 // update number of pairs in distance
-                pair = Integer.parseInt(data[2]);
+                if(!data[1].equals("")) {
+                    // kvartett
+                    pair = Integer.parseInt(data[1]);
+                    kvartett = true;
+                } else {
+                    if(!kvartett) pair = Integer.parseInt(data[2]);
+                }
                 distance.updatePair(pair);
 
-                if(getProgress(data, 8) == null) {
+                // create/update skater
+                skater = updateSkater(name, tree, distance, pair);
+
+
+                // pair is either finished or in progress
+                if(data.length > 8) {
+                    // pair has finished
+                    if(data[8] != null && !data[8].equals("")){
+                        timeData = new TimeData(System.currentTimeMillis(),distance,pair);
+                        //System.out.println(line);
+                        //System.out.println(data[8]);
+                        distance.setLivePair(pair);
+                    }
+                }
+                /*if(getProgress(data, 8) == null) {
+                    System.out.println(name);
                     timeData = new TimeData(System.currentTimeMillis(),distance);
                     distance.setLivePair(pair);
-                }
+                }*/
 
                 // add distance to list of distances to gain control of occurrence
                 if (!distances.contains(distance)) distances.add(distance);
@@ -104,9 +123,15 @@ public class RaceStructure {
 
     public String getProgress(String[] data, int index){
         // hvis det ikke er flere passeringstider, altså paret er ferdig
-        if(data.length <= index) return "End";
+        if(data.length <= index) {
+            //System.out.println("Ended");
+            return "End";
+        }
         // hvis data er null, er det så langt løpet har kommet
-        if(data[index] == null) return null;
+        if(data[index] == null) {
+            System.out.println("Live");
+            return null;
+        }
         else{
             // kjør rekursivt gjennom data
             return getProgress(data,++index);
@@ -115,7 +140,10 @@ public class RaceStructure {
 
     public Distance setDistance(Distance distance, String distanceString){
         if (distance == null || !distance.getDistance().equals(distanceString)) {
-            if(distance != null) distance.setFinished();
+            // return the new distance and set previous finished if it is
+            if(distance != null && distance.getLivePair() == distance.getPairs()) {
+                distance.setFinished();
+            }
             return new Distance(distanceString);
         }
         return distance;
@@ -123,16 +151,19 @@ public class RaceStructure {
 
     public TimeData getTimeData(){ return timeData;}
 
-    public Skater updateSkater(String name, ConcurrentRadixTree<Skater> tree, Distance d, String[] data){
+    public Skater updateSkater(String name, ConcurrentRadixTree<Skater> tree, Distance d, int pair){
         Skater s = tree.getValueForExactKey(name.toLowerCase());
         if(s != null){
-           String time = data[8];
-            long currentTime = System.currentTimeMillis();
+           //String time = data[7];
+            //long currentTime = System.currentTimeMillis();
             //MainActivityFragment.currentTime = currentTime;
-            if(time != null && !s.timeSet(d)) s.addTime(currentTime);
+            //if(time != null && !s.timeSet(d)) s.addTime(currentTime);
+            //s.addDistance(d,pair);
            return s;
        } else {
-           return new Skater(name);
+            s = new Skater(name);
+            //s.addDistance(d,pair);
+            return s;
        }
     }
 
