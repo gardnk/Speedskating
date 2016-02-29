@@ -8,13 +8,16 @@ import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -33,7 +36,11 @@ import android.widget.Toast;
 
 import com.astuetz.PagerSlidingTabStrip;
 import com.googlecode.concurrenttrees.radix.ConcurrentRadixTree;
+
+import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -64,6 +71,10 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
     public boolean startup = true;
 
 
+    public StartList startList;
+    public Button foo;
+
+
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
@@ -72,8 +83,13 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
+        // save crash reports to file
+        //loggingInit();
+
         main = inflater.inflate(R.layout.fragment_activity, container, false);
-        typeface = Typeface.createFromAsset(getActivity().getAssets(),"Neon.ttf");
+        typeface = Typeface.createFromAsset(getActivity().getAssets(), "Neon.ttf");
+        foo = (Button)main.findViewById(R.id.startlist);
+
         changeStatusBarColor();
         updateViews();
         startListeners();
@@ -188,7 +204,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
                 searchField.setVisibility(View.VISIBLE);
                 skaterList.setVisibility(View.VISIBLE);
                 // reset skater when searching for new one
-                skater = null;
+                //skater = null;
                 showSoftKeyboard();
                 hideTabs();
             }
@@ -402,6 +418,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         protected TimeData doInBackground(Void... params) {
             raceStructure = new RaceStructure("http://web.glitretid.no/csv.php?default", preferences);
             raceStructure.update();
+            startList = raceStructure.getStartList();
             return raceStructure.getTimeData();
         }
 
@@ -421,6 +438,20 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
                 showTabs(skater, data);
             }
             loading.dismiss();
+
+            foo.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Bundle bundle = new Bundle();
+                    bundle.putParcelable("startlist", startList);
+
+                    StartListActivity activity = new StartListActivity();
+                    activity.setArguments(bundle);
+                    getActivity().getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.main, activity)
+                            .commit();
+                }
+            });
         }
     }
 
@@ -502,5 +533,32 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
             pairStarted = System.currentTimeMillis();
             livePair = pair;
         }
+    }
+
+    void loggingInit(){
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+
+            @Override
+            public void uncaughtException(Thread thread, Throwable ex) {
+                // TODO Auto-generated method stub
+                try {
+                    File dir = Environment.getExternalStorageDirectory();
+                    File logDir = new File(dir.getAbsolutePath() + "/speedskatinglog/");
+                    logDir.mkdirs();
+                    FileWriter writer = new FileWriter(new File(logDir, "log.txt"));
+                    writer.append(ex.getMessage() + "\n");
+                    writer.append(ex.getCause().toString() + "\n");
+                    writer.close();
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState){
+        super.onSaveInstanceState(outState);
+        outState.putParcelable("startlist",startList);
     }
 }

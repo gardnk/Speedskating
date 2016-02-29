@@ -18,6 +18,9 @@ public class RaceStructure {
     TimeData timeData;
     boolean kvartett = false;
 
+    public StartList startList;
+    Distanse distanse;
+
     RaceStructure(String urlString, SharedPreferences preferences){
         list = new ArrayList<>();
         this.urlString = urlString;
@@ -35,6 +38,8 @@ public class RaceStructure {
             while ((line = in.readLine()) != null) {
                 list.add(line);
             }
+
+            if(startList == null) startList = new StartList();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -72,6 +77,9 @@ public class RaceStructure {
                 // set distance
                 String distanceString = dist + "" + klasse;
                 distance = setDistance(distance, distanceString);
+
+                if(distanse == null || !distanse.getDistance().equals(distanceString))
+                    distanse = new Distanse(distanceString);
 
                 // update number of pairs in distance
                 if(!data[1].equals("")) {
@@ -113,12 +121,22 @@ public class RaceStructure {
 
                 // add default preference value if no value exists already
                 if(!sharedPreferences.contains(distance.getDistance())) addDefaultPrefs(distance);
+
+                addToStartList(skater, distanceString);
             }
         }
         // if the last distance is finished
         // works only when distance is live
         if(distance != null && distance.getPairs() == distance.getLivePair()) distance.setFinished();
         return new RaceData(tree,distances);
+    }
+
+    void addToStartList(Skater skater, String distanceString){
+
+        if(!startList.contains(distanceString)) {
+            startList.addDistance(distanse);
+        }
+        distanse.addSkater(skater);
     }
 
     public String getProgress(String[] data, int index){
@@ -150,6 +168,8 @@ public class RaceStructure {
     }
 
     public TimeData getTimeData(){ return timeData;}
+
+    public StartList getStartList(){ return startList;}
 
     public Skater updateSkater(String name, ConcurrentRadixTree<Skater> tree, Distance d, int pair){
         Skater s = tree.getValueForExactKey(name.toLowerCase());

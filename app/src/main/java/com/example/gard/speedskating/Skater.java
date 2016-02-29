@@ -1,10 +1,13 @@
 package com.example.gard.speedskating;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class Skater {
+public class Skater implements Parcelable {
     private String name;
     private ArrayList<Distance> races = new ArrayList<>();
     private ArrayList<Integer> pairs = new ArrayList<>();
@@ -29,4 +32,38 @@ public class Skater {
         if(previousTimes.size() >= races.indexOf(d)) return false;
         else return true;
     }
+
+
+    /**
+     *  Parcelable part of the class
+     *  for passiing object using bundle
+     *
+     */
+
+    public Skater(Parcel in){
+        String[] data = new String[1];
+        in.readStringArray(data);
+
+        this.name = data[0];
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeStringArray(new String[] { this.name});
+    }
+
+    public static final Parcelable.Creator CREATOR = new Parcelable.Creator(){
+        public Skater createFromParcel(Parcel in){
+            return new Skater(in);
+        }
+
+        public Skater[] newArray(int size){
+            return new Skater[size];
+        }
+    };
 }
