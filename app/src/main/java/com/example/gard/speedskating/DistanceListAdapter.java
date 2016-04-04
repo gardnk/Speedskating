@@ -75,7 +75,7 @@ public class DistanceListAdapter extends BaseExpandableListAdapter {
         TextView header = (TextView)convertView.findViewById(R.id.listHeader);
         header.setText(distanceTitle);
 
-
+        System.out.println("Group view: "+distanceTitle);
         return convertView;
     }
 
@@ -87,6 +87,7 @@ public class DistanceListAdapter extends BaseExpandableListAdapter {
 
         LayoutInflater inflater = (LayoutInflater)this.context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         convertView = inflater.inflate(R.layout.list_child_item, parent, false);
+        System.out.println("Child view: "+skater.getName());
 
         TextView name = (TextView)convertView.findViewById(R.id.item);
         name.setText(skater.getName());

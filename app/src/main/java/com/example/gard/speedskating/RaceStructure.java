@@ -10,7 +10,9 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 
-
+/**
+ * Leser data fra url og oppretter lokal struktur
+ */
 public class RaceStructure {
     ArrayList<String> list;
     String urlString;
@@ -51,6 +53,7 @@ public class RaceStructure {
         boolean begun = false;
         Skater skater;
         Distance distance = null;
+        String forrigeKlasse = "";
 
         // hvis det er en bug i scriptet
         //int skaterNumber = 1;
@@ -67,19 +70,32 @@ public class RaceStructure {
                 // er distansen trukket?
                 if(data[2].equals("")) continue;
 
-                // hvis det er et par med kun én løper
-                if (data.length == 6 || data[6].equals("")) continue;
-
                 String dist = data[0];
                 String klasse = data[4];
-                String name = data[6];
+                String name = "";
 
                 // set distance
                 String distanceString = dist + "" + klasse;
                 distance = setDistance(distance, distanceString);
 
-                if(distanse == null || !distanse.getDistance().equals(distanceString))
-                    distanse = new Distanse(distanceString);
+                // hvis det er et par med kun én løper
+                // legg inn en "tom" løper for å kunne flytte noen dit senere
+                // hvis det blir endringer (strykninger)
+                if (data.length == 6 || data[6].equals("")) {
+                    String tmpDistance = dist+ ""+ forrigeKlasse;
+                    skater = updateSkater(name, tree, distance, pair);
+
+                    if(distanse == null || !distanse.getDistance().equals(tmpDistance))
+                        distanse = new Distanse(tmpDistance);
+
+                    addToStartList(skater, tmpDistance);
+
+                    continue;
+                } else {
+                    name = data[6];
+                    if(distanse == null || !distanse.getDistance().equals(distanceString))
+                        distanse = new Distanse(distanceString);
+                }
 
                 // update number of pairs in distance
                 if(!data[1].equals("")) {
@@ -105,11 +121,6 @@ public class RaceStructure {
                         distance.setLivePair(pair);
                     }
                 }
-                /*if(getProgress(data, 8) == null) {
-                    System.out.println(name);
-                    timeData = new TimeData(System.currentTimeMillis(),distance);
-                    distance.setLivePair(pair);
-                }*/
 
                 // add distance to list of distances to gain control of occurrence
                 if (!distances.contains(distance)) distances.add(distance);
@@ -123,6 +134,7 @@ public class RaceStructure {
                 if(!sharedPreferences.contains(distance.getDistance())) addDefaultPrefs(distance);
 
                 addToStartList(skater, distanceString);
+                forrigeKlasse = klasse;
             }
         }
         // if the last distance is finished

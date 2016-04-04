@@ -16,11 +16,24 @@
         android:id="@+id/expandable_list">
     </ExpandableListView>
 
+    <com.woxthebox.draglistview.DragListView
+        android:layout_width="100dp"
+        android:layout_height="match_parent"
+        android:id="@+id/drag_list">
+    </com.woxthebox.draglistview.DragListView>
+
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/startlist">
 
     </ListView>
+
+    <com.terlici.dragndroplist.DragNDropListView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/dragdroplist">
+
+    </com.terlici.dragndroplist.DragNDropListView>
 
 </LinearLayout>

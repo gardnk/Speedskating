@@ -2,8 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Speedskating.iml" filepath="$PROJECT_DIR$/Speedskating.iml" />
+      <module fileurl="file://$PROJECT_DIR$/libs/DragNDropList/DragNDropList.iml" filepath="$PROJECT_DIR$/libs/DragNDropList/DragNDropList.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/speedskating.iml" filepath="$PROJECT_DIR$/speedskating.iml" />
     </modules>
   </component>
 </project>

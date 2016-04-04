@@ -72,7 +72,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
 
 
     public StartList startList;
-    public Button foo;
+    public Button editStartList;
 
 
     @Override
@@ -83,12 +83,10 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
-        // save crash reports to file
-        //loggingInit();
 
         main = inflater.inflate(R.layout.fragment_activity, container, false);
         typeface = Typeface.createFromAsset(getActivity().getAssets(), "Neon.ttf");
-        foo = (Button)main.findViewById(R.id.startlist);
+        editStartList = (Button)main.findViewById(R.id.startlist);
 
         changeStatusBarColor();
         updateViews();
@@ -126,7 +124,11 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         }
     }
 
-    // get color state list depending on api level
+    /**
+     *
+     * @param id color id
+     * @return color state list depending on API level
+     */
     public ColorStateList getColorStateList(int id){
         if(Build.VERSION.SDK_INT >= 23){
             return getResources().getColorStateList(id, null);
@@ -211,6 +213,9 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         });
     }
 
+    /**
+     * Autocomplete når det søkes etter løpere
+     */
     public void textListener(){
         final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(),R.layout.list_item){
             @Override
@@ -307,6 +312,11 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         }
     }
 
+    /**
+     *
+     * @param skater den valgte løperen
+     * @return liste med distanser løperen skal gå
+     */
     ArrayList<String> getTabTitles(Skater skater){
 
         ArrayList<String> temp = new ArrayList<>();
@@ -396,6 +406,9 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
         return (long)skater.getPair(d)-currentPair;
     }
 
+    /**
+     * Leser startlisten fra web og lager den lokale strukturen
+     */
     private class NetworkActivity extends AsyncTask<Void,Void,TimeData> {
 
         RaceStructure raceStructure;
@@ -439,7 +452,7 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
             }
             loading.dismiss();
 
-            foo.setOnClickListener(new View.OnClickListener() {
+            editStartList.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Bundle bundle = new Bundle();
@@ -533,27 +546,6 @@ public class MainActivityFragment extends android.support.v4.app.Fragment {
             pairStarted = System.currentTimeMillis();
             livePair = pair;
         }
-    }
-
-    void loggingInit(){
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-
-            @Override
-            public void uncaughtException(Thread thread, Throwable ex) {
-                // TODO Auto-generated method stub
-                try {
-                    File dir = Environment.getExternalStorageDirectory();
-                    File logDir = new File(dir.getAbsolutePath() + "/speedskatinglog/");
-                    logDir.mkdirs();
-                    FileWriter writer = new FileWriter(new File(logDir, "log.txt"));
-                    writer.append(ex.getMessage() + "\n");
-                    writer.append(ex.getCause().toString() + "\n");
-                    writer.close();
-                } catch(Exception e){
-                    e.printStackTrace();
-                }
-            }
-        });
     }
 
     @Override
